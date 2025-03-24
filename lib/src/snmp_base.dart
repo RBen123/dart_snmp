@@ -169,7 +169,6 @@ class Snmp {
   /// Closes the network socket
   void close() {
     socket?.close();
-    socket?.listen(null);
     socket = null;
     log.info('Socket on ${target.address}:$port closed.');
   }
