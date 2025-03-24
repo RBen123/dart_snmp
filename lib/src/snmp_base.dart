@@ -146,7 +146,7 @@ class Snmp {
   SnmpVersion version;
 
   /// The socket used for all incoming/outgoing snmp requests/responses
-  late RawDatagramSocket socket;
+  RawDatagramSocket? socket;
 
   /// A map of sent snmp requests which are still awaiting a response
   Map<int, Request> requests = {};
@@ -162,18 +162,20 @@ class Snmp {
     address ??= InternetAddress.anyIPv4;
     port ??= 49152 + Random().nextInt(16383); // IANA range 49152 to 65535
     socket = await RawDatagramSocket.bind(address, port);
-    socket.listen(_onEvent, onError: _onError, onDone: _onClose);
+    socket?.listen(_onEvent, onError: _onError, onDone: _onClose);
     log.info('Bound to target ${address.address} on port $port');
   }
 
   /// Closes the network socket
   void close() {
-    _onClose();
+    socket?.close();
+    socket?.listen(null);
+    socket = null;
     log.info('Socket on ${target.address}:$port closed.');
   }
 
   void _onEvent(RawSocketEvent event) {
-    var d = socket.receive();
+    var d = socket?.receive();
     if (d == null) return;
 
     var msg = Message.fromBytes(d.data);
@@ -189,7 +191,7 @@ class Snmp {
 
   void _onClose() {
     _cancelAllRequests();
-    socket.close();
+    socket?.close();
     log.info('Socket forcibly closed. All requests cleared.');
   }
 
@@ -303,7 +305,7 @@ class Snmp {
 
   void _send(Request r) {
     log.finest('Sending: $r');
-    socket.send(r.message.encodedBytes, r.target, r.port);
+    socket?.send(r.message.encodedBytes, r.target, r.port);
     Future<void>.delayed(r.timeout, () => _timeout(r));
     requests[r.requestId] = r;
   }
