@@ -161,7 +161,8 @@ class Snmp {
   Future<void> _bind({InternetAddress? address, int? port}) async {
     address ??= InternetAddress.anyIPv4;
     port ??= 49152 + Random().nextInt(16383); // IANA range 49152 to 65535
-    socket = await RawDatagramSocket.bind(address, port);
+    socket = await RawDatagramSocket.bind(address, port,
+        reusePort: true, reuseAddress: true,);
     socket?.listen(_onEvent, onError: _onError, onDone: _onClose);
     log.info('Bound to target ${address.address} on port $port');
   }
